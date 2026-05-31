@@ -1,6 +1,6 @@
 import { db } from './firebase.js'
 import {
-  collection, query, orderBy, limit, where,
+  collection, query, orderBy,
   getDocs, addDoc, serverTimestamp
 } from 'firebase/firestore'
 
@@ -10,18 +10,20 @@ let activeCategory = 'alle'
 
 // ─── Category config ──────────────────────────────────────
 const CAT_CONFIG = {
-  skyting:  { label: 'Skyting & IPSC',       color: 'ci-gold',   tagClass: 'tg-gold',   accent: '#c9a84c40', layout: 'grid' },
-  militær:  { label: 'Militær & Faglig',     color: 'ci-blue',   tagClass: 'tg-blue',   accent: '#4a7ab540', layout: 'list' },
-  ledelse:  { label: 'Ledelse & Refleksjon', color: 'ci-purple', tagClass: 'tg-purple',  accent: '#7a5ab540', layout: 'grid' },
-  personlig:{ label: 'Personlig',            color: 'ci-green',  tagClass: 'tg-green',  accent: '#4a8a5a40', layout: 'grid' },
+  skyting:   { label: 'Skyting',    color: 'ci-gold',   tagClass: 'tg-gold',   accent: '#c9a84c40', layout: 'grid' },
+  reisebrev: { label: 'Reisebrev',  color: 'ci-blue',   tagClass: 'tg-blue',   accent: '#4a7ab540', layout: 'grid' },
+  forsvaret: { label: 'Forsvaret',  color: 'ci-green',  tagClass: 'tg-green',  accent: '#4a8a5a40', layout: 'list' },
+  ledelse:   { label: 'Ledelse',    color: 'ci-purple', tagClass: 'tg-purple', accent: '#7a5ab540', layout: 'grid' },
 }
 
 function getCatForArticle(article) {
-  const cat = (article.category || '').toLowerCase()
-  if (['skyting','ipsc','nm','em','vm','match','reisebrev','kurs'].some(k => cat.includes(k))) return 'skyting'
-  if (['militær','military','nato','hns','flo','nlogs','stab','fagartikkel'].some(k => cat.includes(k))) return 'militær'
-  if (['ledelse','leadership','refleksjon','mentor'].some(k => cat.includes(k))) return 'ledelse'
-  return 'personlig'
+  const cat   = (article.category || '').toLowerCase()
+  const title = (article.title    || '').toLowerCase()
+
+  if (['reisebrev','resebrev','nordisk','skepplanda','sno','latin american','european','world shoot'].some(k => title.includes(k) || cat.includes(k))) return 'reisebrev'
+  if (['militær','military','nato','hns','flo','nlogs','stab','fagartikkel','forsvaret','forsvar','operasjon','totalforsvar'].some(k => cat.includes(k) || title.includes(k))) return 'forsvaret'
+  if (['ledelse','leadership','refleksjon','hitfactor','mentalt','mentor','årskavalkade'].some(k => cat.includes(k) || title.includes(k))) return 'ledelse'
+  return 'skyting'
 }
 
 // ─── Date formatting ──────────────────────────────────────
@@ -31,7 +33,6 @@ function fmtDate(ts) {
   return d.toLocaleDateString('nb-NO', { day: 'numeric', month: 'short', year: 'numeric' })
 }
 
-// ─── Strip HTML to plain text ─────────────────────────────
 function stripHtml(html) {
   const d = document.createElement('div')
   d.innerHTML = html
@@ -42,7 +43,6 @@ function excerpt(html, len = 120) {
   return stripHtml(html).slice(0, len).trim() + '…'
 }
 
-// ─── Extract first image from body or heroImage ───────────
 function firstImage(article) {
   if (article.heroImage) return article.heroImage
   if (!article.body) return null
@@ -64,62 +64,19 @@ const targetSvg = `<svg viewBox="0 0 80 80" fill="none" aria-hidden="true">
 
 // ─── Fetch all articles ────────────────────────────────────
 async function fetchArticles() {
-  const q = query(
-    collection(db, 'articles'),
-    orderBy('date', 'desc')
-  )
+  const q = query(collection(db, 'articles'), orderBy('date', 'desc'))
   const snap = await getDocs(q)
   return snap.docs
     .map(d => ({ id: d.id, ...d.data() }))
     .filter(a => a.published === true)
 }
 
-// ─── Render featured strip (top 5) ────────────────────────
-function renderFeatured(articles) {
-  const top = articles.slice(0, 5)
-  if (!top.length) { document.getElementById('featuredStrip').innerHTML = ''; return }
-
-  const [main, ...sides] = top
-  const mainCat = getCatForArticle(main)
-  const cfg = CAT_CONFIG[mainCat] || CAT_CONFIG.personlig
-
-  const sideHtml = sides.map((a, i) => {
-    const c = CAT_CONFIG[getCatForArticle(a)] || CAT_CONFIG.personlig
-    return `<div class="fs-side-item" data-id="${a.id}" style="background:linear-gradient(135deg,#09090e,#070707)">
-      <div class="fsi-num">0${i+2}</div>
-      <div class="fsi-cat" style="color:${c.accent}">${a.category || 'Artikkel'}</div>
-      <div class="fsi-title">${a.title}</div>
-      <div class="fsi-meta">${fmtDate(a.date)}</div>
-    </div>`
-  })
-
-  // Split sides into two columns
-  const col1 = sideHtml.slice(0, 2).join('')
-  const col2 = sideHtml.slice(2, 4).join('')
-
-  document.getElementById('featuredStrip').innerHTML = `
-    <div class="fs-main" data-id="${main.id}">
-      <div class="fs-watermark">${targetSvg}</div>
-      <div class="fs-num">01</div>
-      <div class="corner-tl"></div>
-      <div class="corner-br"></div>
-      <div class="fs-eyebrow">Siste innlegg · ${main.category || 'Artikkel'}</div>
-      <div class="fs-title">${main.title}</div>
-      <div class="fs-body">${excerpt(main.body || '', 160)}</div>
-      <div class="fs-read">Les innlegget →</div>
-    </div>
-    <div class="fs-side">${col1}</div>
-    <div class="fs-side">${col2}</div>
-  `
-}
-
-// ─── Render category sections ──────────────────────────────
+// ─── Render sections ───────────────────────────────────────
 function renderSections(articles) {
   const main = document.getElementById('main')
 
-  // Group by resolved category
   const groups = {}
-  for (const [key] of Object.entries(CAT_CONFIG)) groups[key] = []
+  for (const key of Object.keys(CAT_CONFIG)) groups[key] = []
   for (const a of articles) {
     const cat = getCatForArticle(a)
     if (groups[cat]) groups[cat].push(a)
@@ -146,20 +103,54 @@ function renderSections(articles) {
   main.innerHTML = html || '<p style="padding:3rem;color:#333;text-align:center">Ingen innlegg funnet.</p>'
 }
 
+// ─── Magazine-style grid ───────────────────────────────────
 function renderGrid(items, cfg) {
-  return `<div class="cat-grid">${items.map((a, i) => {
+  if (!items.length) return ''
+
+  // First item: big card, rest: small
+  const [main, ...rest] = items
+
+  const mainImg = firstImage(main)
+  const bigCard = `
+    <div class="card-big" data-id="${main.id}">
+      ${mainImg
+        ? `<img class="card-big-img" src="${mainImg}" alt="${main.title}" loading="lazy">`
+        : `<div class="card-big-placeholder">${targetSvg}</div>`}
+      <div class="card-big-overlay"></div>
+      <div class="corner-tl"></div>
+      <div class="corner-br"></div>
+      <div class="card-big-body">
+        <div class="card-eyebrow">
+          <span class="card-cat ${cfg.tagClass}">${main.category || cfg.label}</span>
+          <span class="card-date">${fmtDate(main.date)}</span>
+        </div>
+        <div class="card-title">${main.title}</div>
+        <div class="card-excerpt">${excerpt(main.body || '', 120)}</div>
+        <div class="card-read">Les innlegget →</div>
+      </div>
+    </div>`
+
+  const smallCards = rest.map(a => {
     const img = firstImage(a)
     return `
-    <div class="cg-item" data-id="${a.id}">
-      ${img ? `<img class="cg-item-img" src="${img}" alt="${a.title}" loading="lazy">` : '<div class="cg-item-img-placeholder"></div>'}
-      <div class="cg-num">0${i+1}</div>
-      <div class="cgi-eyebrow">
-        <span class="cgi-tag ${cfg.tagClass}">${a.category || 'Artikkel'}</span>
-        <span class="cgi-date">${fmtDate(a.date)}</span>
+    <div class="card-small" data-id="${a.id}">
+      ${img
+        ? `<img class="card-small-img" src="${img}" alt="${a.title}" loading="lazy">`
+        : `<div class="card-small-placeholder"></div>`}
+      <div class="card-small-body">
+        <div class="card-eyebrow">
+          <span class="card-cat ${cfg.tagClass}">${a.category || cfg.label}</span>
+          <span class="card-date">${fmtDate(a.date)}</span>
+        </div>
+        <div class="card-title-sm">${a.title}</div>
       </div>
-      <div class="cgi-title">${a.title}</div>
-      <div class="cgi-excerpt">${excerpt(a.body || '', 100)}</div>
-    </div>`}).join('')}</div>`
+    </div>`
+  }).join('')
+
+  return `<div class="magazine-grid">
+    ${bigCard}
+    <div class="card-stack">${smallCards}</div>
+  </div>`
 }
 
 function renderList(items, cfg) {
@@ -171,13 +162,12 @@ function renderList(items, cfg) {
         <div class="wl-title">${a.title}</div>
         <div class="wl-meta">${fmtDate(a.date)}${a.tags ? ' · ' + a.tags : ''}</div>
       </div>
-      <div class="wl-cat">${a.category || 'Artikkel'}</div>
+      <div class="wl-cat">${a.category || cfg.label}</div>
     </div>`).join('')}</div>`
 }
 
-// ─── Render "Om meg" page ──────────────────────────────────
+// ─── Om meg ────────────────────────────────────────────────
 function renderAbout() {
-  document.getElementById('featuredStrip').innerHTML = ''
   document.getElementById('main').innerHTML = `
     <section class="about-section">
       <div class="about-eyebrow">Om meg</div>
@@ -209,11 +199,9 @@ function renderAbout() {
     </section>`
 }
 
-// ─── Filter by category ────────────────────────────────────
+// ─── Filter ────────────────────────────────────────────────
 function filterCategory(cat) {
   activeCategory = cat
-
-  // Update nav
   document.querySelectorAll('.nav-cat, .mobile-menu button').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.cat === cat)
   })
@@ -224,10 +212,8 @@ function filterCategory(cat) {
     ? allArticles
     : allArticles.filter(a => getCatForArticle(a) === cat)
 
-  renderFeatured(filtered)
   renderSections(cat === 'alle' ? allArticles : filtered)
 
-  // If filtering, only show that section
   if (cat !== 'alle') {
     document.querySelectorAll('.cat-section').forEach(s => {
       s.style.display = s.dataset.section === cat ? '' : 'none'
@@ -235,7 +221,7 @@ function filterCategory(cat) {
   }
 }
 
-// ─── Open article modal ────────────────────────────────────
+// ─── Modal ─────────────────────────────────────────────────
 function openArticle(articleId) {
   const article = allArticles.find(a => a.id === articleId)
   if (!article) return
@@ -248,7 +234,7 @@ function openArticle(articleId) {
       <div class="comment-author">${c.name}</div>
       <div class="comment-date">${c.date || ''}</div>
       <div class="comment-body">${c.body}</div>
-    </div>`).join('') || '<p style="font-size:12px;color:#333;padding:0.5rem 0">Ingen kommentarer ennå. Vær den første!</p>'
+    </div>`).join('') || '<p style="font-size:12px;color:#333;padding:0.5rem 0">Ingen kommentarer ennå.</p>'
 
   content.innerHTML = `
     <div class="modal-eyebrow">${article.category || 'Artikkel'}</div>
@@ -269,25 +255,21 @@ function openArticle(articleId) {
   modal.classList.add('open')
   document.body.style.overflow = 'hidden'
 
-  // Submit comment
   document.getElementById('submitComment').addEventListener('click', async () => {
     const name = document.getElementById('commentName').value.trim()
     const body = document.getElementById('commentBody').value.trim()
     if (!name || !body) return
-
     await addDoc(collection(db, 'articles', articleId, 'comments'), {
       name, body, date: new Date().toLocaleDateString('nb-NO'), createdAt: serverTimestamp()
     })
-
     document.getElementById('commentName').value = ''
     document.getElementById('commentBody').value = ''
-
-    const list = document.getElementById('commentList')
-    list.innerHTML += `<div class="comment-item">
-      <div class="comment-author">${name}</div>
-      <div class="comment-date">I dag</div>
-      <div class="comment-body">${body}</div>
-    </div>`
+    document.getElementById('commentList').innerHTML += `
+      <div class="comment-item">
+        <div class="comment-author">${name}</div>
+        <div class="comment-date">I dag</div>
+        <div class="comment-body">${body}</div>
+      </div>`
   })
 }
 
@@ -296,43 +278,31 @@ function closeModal() {
   document.body.style.overflow = ''
 }
 
-// ─── Event delegation ──────────────────────────────────────
+// ─── Events ────────────────────────────────────────────────
 document.addEventListener('click', e => {
-  // Article click
   const articleEl = e.target.closest('[data-id]')
   if (articleEl) { openArticle(articleEl.dataset.id); return }
-
-  // Nav category
   const navCat = e.target.closest('[data-cat]')
   if (navCat) { filterCategory(navCat.dataset.cat); return }
-
-  // See all
   if (e.target.matches('.cat-see-all')) { filterCategory(e.target.dataset.cat); return }
-
-  // Modal close
   if (e.target.matches('#modalClose') || e.target.matches('#modalBackdrop')) { closeModal(); return }
 })
 
-// Mobile toggle
 document.getElementById('mobileToggle').addEventListener('click', () => {
   document.getElementById('mobileMenu').classList.toggle('open')
 })
 
-// Keyboard close
-document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') closeModal()
-})
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal() })
 
 // ─── Boot ──────────────────────────────────────────────────
 async function init() {
   try {
     allArticles = await fetchArticles()
-    renderFeatured(allArticles)
     renderSections(allArticles)
   } catch (err) {
     console.error('Firebase error:', err)
     document.getElementById('main').innerHTML =
-      '<p style="padding:3rem;color:#444;text-align:center;font-size:12px">Kunne ikke laste innlegg. Sjekk Firebase-konfigurasjon.</p>'
+      '<p style="padding:3rem;color:#444;text-align:center;font-size:12px">Kunne ikke laste innlegg.</p>'
   }
 }
 
