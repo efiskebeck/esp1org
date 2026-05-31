@@ -19,10 +19,15 @@ const CAT_CONFIG = {
 function getCatForArticle(article) {
   const cat   = (article.category || '').toLowerCase()
   const title = (article.title    || '').toLowerCase()
+  const tags  = (article.tags     || '').toLowerCase()
+  const all   = cat + ' ' + title + ' ' + tags
 
-  if (['reisebrev','resebrev','nordisk','skepplanda','sno','latin american','european','world shoot'].some(k => title.includes(k) || cat.includes(k))) return 'reisebrev'
-  if (['militær','military','nato','hns','flo','nlogs','stab','fagartikkel','forsvaret','forsvar','operasjon','totalforsvar'].some(k => cat.includes(k) || title.includes(k))) return 'forsvaret'
-  if (['ledelse','leadership','refleksjon','hitfactor','mentalt','mentor','årskavalkade'].some(k => cat.includes(k) || title.includes(k))) return 'ledelse'
+  if (['reisebrev','resebrev','nordisk','skepplanda','sno 2025','latin american','championship','open 2025',
+       'vm #','nm i stavanger','norgesmesterskapet','europamesterskap','moose','fox'].some(k => all.includes(k))) return 'reisebrev'
+  if (['militær','military','nato','hns','flo','nlogs','stab','fagartikkel','forsvaret','forsvar',
+       'operasjon','totalforsvar','comprehensive','j4','vertsland'].some(k => all.includes(k))) return 'forsvaret'
+  if (['ledelse','leadership','refleksjon','hitfactor','mentalt','mentor','årskavalkade',
+       'årsoppsummering','kavalkade'].some(k => all.includes(k))) return 'ledelse'
   return 'skyting'
 }
 
@@ -236,21 +241,33 @@ function openArticle(articleId) {
       <div class="comment-body">${c.body}</div>
     </div>`).join('') || '<p style="font-size:12px;color:#333;padding:0.5rem 0">Ingen kommentarer ennå.</p>'
 
-  content.innerHTML = `
-    <div class="modal-eyebrow">${article.category || 'Artikkel'}</div>
-    <h2 class="modal-title" id="modalTitle">${article.title}</h2>
-    <div class="modal-meta">${fmtDate(article.date)}</div>
-    ${article.heroImage ? `<img class="modal-hero-img" src="${article.heroImage}" alt="${article.title}">` : ''}
-    <div class="modal-body">${article.body || ''}</div>
-    <div class="comments-section">
-      <div class="comments-title">Kommentarer</div>
-      <div id="commentList">${commentsHtml}</div>
-      <div class="comment-form">
-        <input id="commentName" type="text" placeholder="Ditt navn" maxlength="80">
-        <textarea id="commentBody" placeholder="Din kommentar…" maxlength="1000"></textarea>
-        <button class="comment-submit" id="submitComment">Legg inn kommentar</button>
+  // Build modal with newspaper style
+  const panel = document.getElementById('modalPanel')
+  panel.innerHTML = `
+    <div class="modal-topbar">
+      <div class="modal-topbar-logo">esp<em>1</em>.org</div>
+      <div class="modal-topbar-cat">${article.category || 'Artikkel'}</div>
+      <button class="modal-close" id="modalClose" aria-label="Lukk">✕</button>
+    </div>
+    <div class="modal-content" id="modalContent">
+      <div class="modal-eyebrow">${article.category || 'Artikkel'}</div>
+      <h2 class="modal-title" id="modalTitle">${article.title}</h2>
+      <div class="modal-meta">${fmtDate(article.date)}</div>
+      ${article.heroImage ? `<img class="modal-hero-img" src="${article.heroImage}" alt="${article.title}">` : ''}
+      <div class="modal-body">${article.body || ''}</div>
+      <div class="modal-divider"></div>
+      <div class="comments-section">
+        <div class="comments-title">Kommentarer</div>
+        <div id="commentList">${commentsHtml}</div>
+        <div class="comment-form">
+          <input id="commentName" type="text" placeholder="Ditt navn" maxlength="80">
+          <textarea id="commentBody" placeholder="Din kommentar…" maxlength="1000"></textarea>
+          <button class="comment-submit" id="submitComment">Legg inn kommentar</button>
+        </div>
       </div>
     </div>`
+  // Re-attach close button
+  document.getElementById('modalClose').addEventListener('click', closeModal)
 
   modal.classList.add('open')
   document.body.style.overflow = 'hidden'
