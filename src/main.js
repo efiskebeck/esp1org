@@ -58,11 +58,12 @@ const targetSvg = `<svg viewBox="0 0 80 80" fill="none" aria-hidden="true">
 async function fetchArticles() {
   const q = query(
     collection(db, 'articles'),
-    where('published', '==', true),
     orderBy('date', 'desc')
   )
   const snap = await getDocs(q)
-  return snap.docs.map(d => ({ id: d.id, ...d.data() }))
+  return snap.docs
+    .map(d => ({ id: d.id, ...d.data() }))
+    .filter(a => a.published === true)
 }
 
 // ─── Render featured strip (top 5) ────────────────────────
