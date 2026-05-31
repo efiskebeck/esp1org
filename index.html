@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="nb">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ESP1.ORG — Espen Fiskebeck</title>
+  <meta name="description" content="Espen Fiskebeck — IPSC-skytter, oberstløytnant, instruktør. Matchrapporter, reisebrev, fagartikler og ledelse." />
+  <link rel="icon" href="/favicon.ico" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="/src/style.css" />
+</head>
+<body>
+  <div id="app">
+
+    <!-- NAV -->
+    <nav class="nav" id="nav">
+      <a href="/" class="logo">ESP<em>1</em>.ORG</a>
+      <div class="nav-cats">
+        <button class="nav-cat active" data-cat="alle">Alle</button>
+        <button class="nav-cat" data-cat="skyting">Skyting</button>
+        <button class="nav-cat" data-cat="militær">Militær</button>
+        <button class="nav-cat" data-cat="ledelse">Ledelse</button>
+        <button class="nav-cat" data-cat="om">Om meg</button>
+      </div>
+      <div class="nav-right">
+        <span class="nav-tag">Pistollandslaget</span>
+        <a href="/admin.html" class="admin-btn">Admin ↗</a>
+      </div>
+      <button class="nav-mobile-toggle" id="mobileToggle" aria-label="Meny">☰</button>
+    </nav>
+
+    <!-- MOBILE MENU -->
+    <div class="mobile-menu" id="mobileMenu">
+      <button data-cat="alle">Alle</button>
+      <button data-cat="skyting">Skyting</button>
+      <button data-cat="militær">Militær</button>
+      <button data-cat="ledelse">Ledelse</button>
+      <button data-cat="om">Om meg</button>
+    </div>
+
+    <!-- HERO -->
+    <section class="hero">
+      <div class="hero-bg"></div>
+      <div class="hero-grid"></div>
+      <div class="hero-glow"></div>
+      <svg class="hero-target" viewBox="0 0 80 80" fill="none" aria-hidden="true">
+        <circle cx="40" cy="40" r="38" stroke="#c9a84c" stroke-width="0.5"/>
+        <circle cx="40" cy="40" r="28" stroke="#c9a84c" stroke-width="0.5"/>
+        <circle cx="40" cy="40" r="18" stroke="#c9a84c" stroke-width="0.5"/>
+        <circle cx="40" cy="40" r="9"  stroke="#c9a84c" stroke-width="0.5"/>
+        <circle cx="40" cy="40" r="3"  fill="#c9a84c" opacity="0.6"/>
+        <line x1="40" y1="0"  x2="40" y2="31" stroke="#c9a84c" stroke-width="0.5"/>
+        <line x1="40" y1="49" x2="40" y2="80" stroke="#c9a84c" stroke-width="0.5"/>
+        <line x1="0"  y1="40" x2="31" y2="40" stroke="#c9a84c" stroke-width="0.5"/>
+        <line x1="49" y1="40" x2="80" y2="40" stroke="#c9a84c" stroke-width="0.5"/>
+      </svg>
+      <div class="hero-overlay"></div>
+      <div class="hero-content">
+        <div class="hero-left">
+          <div class="hero-eyebrow">Norsk skytter · Oberstløytnant · Instruktør</div>
+          <h1 class="hero-name">Espen <em>Fiskebeck</em></h1>
+          <div class="hero-sub">Norwegian Sport Shooter & Military Professional</div>
+          <div class="hero-pills">
+            <span class="pill gold">IPSC Classic</span>
+            <span class="pill gold">Pistollandslaget</span>
+            <span class="pill">FLO / NLOGS</span>
+            <span class="pill">Stabsskolen</span>
+            <span class="pill">DSSN</span>
+          </div>
+        </div>
+        <div class="hero-right" aria-hidden="true">
+          <div class="hero-stat-big">VM</div>
+          <div class="hero-stat-label">2025 · Verdensmesterskap</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FEATURED — top 5 posts -->
+    <section class="featured-strip" id="featuredStrip">
+      <div class="fs-loading">Laster innlegg…</div>
+    </section>
+
+    <!-- DYNAMIC SECTIONS -->
+    <main id="main">
+      <div class="loading-full">Laster innhold…</div>
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="foot">
+      <div class="foot-brand">
+        <div class="logo">ESP<em>1</em>.ORG</div>
+        <p>Espen Fiskebeck. Skytter, offiser, instruktør. Norsk idrettsutøver på høyt internasjonalt nivå.</p>
+      </div>
+      <div>
+        <div class="foot-col-title">Kategorier</div>
+        <div class="foot-links">
+          <a href="#" class="foot-link" data-cat="skyting">Skyting & IPSC</a>
+          <a href="#" class="foot-link" data-cat="militær">Militær & Faglig</a>
+          <a href="#" class="foot-link" data-cat="ledelse">Ledelse & Refleksjon</a>
+        </div>
+      </div>
+      <div>
+        <div class="foot-col-title">Lenker</div>
+        <div class="foot-links">
+          <a href="https://insight-dynamics-shooting.org" class="foot-link" target="_blank">IPSC Insight Coach</a>
+          <a href="https://github.com/efiskebeck" class="foot-link" target="_blank">GitHub</a>
+          <a href="https://www.dssn.no" class="foot-link" target="_blank">DSSN</a>
+        </div>
+      </div>
+    </footer>
+    <div class="foot-bottom">
+      <span class="foot-copy">© 2026 ESP1.ORG · Espen Fiskebeck</span>
+      <span class="foot-copy">Vite · Firebase · GitHub Pages</span>
+    </div>
+
+  </div>
+
+  <!-- ARTICLE MODAL -->
+  <div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal-backdrop" id="modalBackdrop"></div>
+    <div class="modal-panel" id="modalPanel">
+      <button class="modal-close" id="modalClose" aria-label="Lukk">✕</button>
+      <div class="modal-content" id="modalContent"></div>
+    </div>
+  </div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>

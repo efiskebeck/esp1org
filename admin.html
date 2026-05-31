@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="nb">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin — ESP1.ORG</title>
+  <link rel="stylesheet" href="/src/style.css" />
+  <link rel="stylesheet" href="/src/admin.css" />
+</head>
+<body>
+  <div id="adminApp">
+
+    <!-- LOGIN -->
+    <div id="loginScreen" class="login-screen">
+      <div class="login-box">
+        <div class="login-logo">ESP<em>1</em>.ORG</div>
+        <div class="login-sub">Admin</div>
+        <form id="loginForm" autocomplete="on">
+          <input type="email"    name="username" id="loginEmail"    autocomplete="username"         placeholder="E-post" required>
+          <input type="password" name="password" id="loginPassword" autocomplete="current-password" placeholder="Passord" required>
+          <button type="submit" class="login-btn">Logg inn</button>
+        </form>
+        <div id="loginError" class="login-error"></div>
+      </div>
+    </div>
+
+    <!-- ADMIN PANEL (hidden until logged in) -->
+    <div id="adminPanel" style="display:none">
+
+      <nav class="admin-nav">
+        <a href="/" class="logo">ESP<em>1</em>.ORG</a>
+        <div class="admin-nav-center">
+          <button class="admin-tab active" data-tab="articles">Artikler</button>
+          <button class="admin-tab" data-tab="new">+ Ny artikkel</button>
+        </div>
+        <div class="admin-nav-right">
+          <span id="adminEmail" class="admin-user"></span>
+          <button id="logoutBtn" class="admin-logout">Logg ut</button>
+        </div>
+      </nav>
+
+      <!-- ARTICLE LIST -->
+      <div id="tabArticles" class="admin-tab-content">
+        <div class="admin-toolbar">
+          <input type="search" id="searchInput" placeholder="Søk i artikler…" class="admin-search">
+          <select id="filterCat" class="admin-filter">
+            <option value="">Alle kategorier</option>
+            <option value="skyting">Skyting</option>
+            <option value="militær">Militær</option>
+            <option value="ledelse">Ledelse</option>
+            <option value="personlig">Personlig</option>
+          </select>
+        </div>
+        <div id="articleList" class="article-list-admin">
+          <div class="loading-full">Laster artikler…</div>
+        </div>
+      </div>
+
+      <!-- NEW / EDIT ARTICLE -->
+      <div id="tabNew" class="admin-tab-content" style="display:none">
+        <div class="editor-wrap">
+          <div class="editor-main">
+            <input type="hidden" id="editId">
+            <input type="text" id="editTitle" class="editor-title-input" placeholder="Artikkeltittel…">
+
+            <div class="editor-meta-row">
+              <select id="editCategory" class="editor-select">
+                <option value="skyting">Skyting / IPSC</option>
+                <option value="militær">Militær & Faglig</option>
+                <option value="ledelse">Ledelse & Refleksjon</option>
+                <option value="personlig">Personlig</option>
+              </select>
+              <input type="text" id="editTags" class="editor-input" placeholder="Tags (kommaseparert)">
+              <input type="date" id="editDate" class="editor-input">
+            </div>
+
+            <!-- Toolbar -->
+            <div class="editor-toolbar">
+              <button type="button" data-cmd="bold"          class="tb-btn" title="Fet">B</button>
+              <button type="button" data-cmd="italic"        class="tb-btn tb-i" title="Kursiv">I</button>
+              <button type="button" data-cmd="h2"            class="tb-btn" title="Overskrift 2">H2</button>
+              <button type="button" data-cmd="h3"            class="tb-btn" title="Overskrift 3">H3</button>
+              <button type="button" data-cmd="quote"         class="tb-btn" title="Sitat">❝</button>
+              <button type="button" data-cmd="link"          class="tb-btn" title="Lenke">🔗</button>
+              <button type="button" data-cmd="insertImage"   class="tb-btn" title="Bilde-URL">📷</button>
+              <div class="tb-sep"></div>
+              <button type="button" id="previewToggle" class="tb-btn">Forhåndsvisning</button>
+            </div>
+
+            <div id="editorBody"    class="editor-body"    contenteditable="true" spellcheck="true"></div>
+            <div id="previewBody"   class="editor-preview" style="display:none"></div>
+          </div>
+
+          <div class="editor-sidebar">
+            <div class="sidebar-section">
+              <div class="sidebar-label">Hero-bilde</div>
+              <input type="file" id="heroImageFile" accept="image/*" class="editor-file">
+              <div id="heroImagePreview" class="image-preview"></div>
+              <input type="text" id="heroImageUrl" class="editor-input" placeholder="…eller lim inn URL">
+            </div>
+
+            <div class="sidebar-section">
+              <div class="sidebar-label">Galleri</div>
+              <input type="file" id="galleryFiles" accept="image/*" multiple class="editor-file">
+              <div id="galleryPreview" class="gallery-preview"></div>
+            </div>
+
+            <div class="sidebar-section">
+              <div class="sidebar-label">Publisering</div>
+              <label class="toggle-label">
+                <input type="checkbox" id="editPublished" class="toggle-input">
+                <span class="toggle-track"></span>
+                <span class="toggle-text">Publisert</span>
+              </label>
+            </div>
+
+            <div class="sidebar-actions">
+              <button id="saveBtn"   class="save-btn">Lagre</button>
+              <button id="deleteBtn" class="delete-btn" style="display:none">Slett artikkel</button>
+            </div>
+            <div id="saveStatus" class="save-status"></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script type="module" src="/src/admin.js"></script>
+</body>
+</html>
