@@ -10,10 +10,11 @@ let activeCategory = 'alle'
 
 // ─── Category config ──────────────────────────────────────
 const CAT_CONFIG = {
-  skyting:   { label: 'Skyting',    color: 'ci-gold',   tagClass: 'tg-gold',   accent: '#c9a84c40', layout: 'grid' },
-  reisebrev: { label: 'Reisebrev',  color: 'ci-blue',   tagClass: 'tg-blue',   accent: '#4a7ab540', layout: 'grid' },
-  forsvaret: { label: 'Forsvaret',  color: 'ci-green',  tagClass: 'tg-green',  accent: '#4a8a5a40', layout: 'list' },
-  ledelse:   { label: 'Ledelse',    color: 'ci-purple', tagClass: 'tg-purple', accent: '#7a5ab540', layout: 'grid' },
+  skyting:    { label: 'Skyting',    color: 'ci-gold',   tagClass: 'tg-gold',   accent: '#c9a84c40', layout: 'grid' },
+  reisebrev:  { label: 'Reisebrev',  color: 'ci-blue',   tagClass: 'tg-blue',   accent: '#4a7ab540', layout: 'grid' },
+  forsvaret:  { label: 'Forsvaret',  color: 'ci-green',  tagClass: 'tg-green',  accent: '#4a8a5a40', layout: 'list' },
+  ledelse:    { label: 'Ledelse',    color: 'ci-purple', tagClass: 'tg-purple', accent: '#7a5ab540', layout: 'grid' },
+  refleksjon: { label: 'Refleksjon', color: 'ci-orange', tagClass: 'tg-orange', accent: '#b5713a40', layout: 'grid' },
 }
 
 function getCatForArticle(article) {
@@ -22,12 +23,13 @@ function getCatForArticle(article) {
   const tags  = (article.tags     || '').toLowerCase()
   const all   = cat + ' ' + title + ' ' + tags
 
+  if (['refleksjon','hitfactor','mentalt fokus','årskavalkade','kavalkade','årsoppsummering',
+       'ny bok','moro på banen'].some(k => all.includes(k))) return 'refleksjon'
   if (['reisebrev','resebrev','nordisk','skepplanda','sno 2025','latin american','championship','open 2025',
        'vm #','nm i stavanger','norgesmesterskapet','europamesterskap','moose','fox'].some(k => all.includes(k))) return 'reisebrev'
   if (['militær','military','nato','hns','flo','nlogs','stab','fagartikkel','forsvaret','forsvar',
        'operasjon','totalforsvar','comprehensive','j4','vertsland'].some(k => all.includes(k))) return 'forsvaret'
-  if (['ledelse','leadership','refleksjon','hitfactor','mentalt','mentor','årskavalkade',
-       'årsoppsummering','kavalkade'].some(k => all.includes(k))) return 'ledelse'
+  if (['ledelse','leadership','mentor'].some(k => all.includes(k))) return 'ledelse'
   return 'skyting'
 }
 
@@ -77,7 +79,7 @@ async function fetchArticles() {
 }
 
 // ─── Render sections ───────────────────────────────────────
-function renderSections(articles) {
+function renderSections(articles, singleCat = null) {
   const main = document.getElementById('main')
 
   const groups = {}
@@ -91,6 +93,10 @@ function renderSections(articles) {
   for (const [key, cfg] of Object.entries(CAT_CONFIG)) {
     const items = groups[key]
     if (!items.length) continue
+    // When showing a single category, show all items; otherwise preview
+    const showAll = singleCat === key
+    const preview = cfg.layout === 'grid' ? 3 : 6
+    const displayed = showAll ? items : items.slice(0, preview)
 
     html += `<section class="cat-section" data-section="${key}">
       <div class="cat-header">
@@ -99,9 +105,11 @@ function renderSections(articles) {
           <div class="cat-name">${cfg.label}</div>
           <div class="cat-count">${items.length} innlegg</div>
         </div>
-        <div class="cat-see-all" data-cat="${key}">Se alle →</div>
+        ${!showAll && items.length > preview
+          ? `<div class="cat-see-all" data-cat="${key}">Se alle ${items.length} →</div>`
+          : ''}
       </div>
-      ${cfg.layout === 'grid' ? renderGrid(items.slice(0, 3), cfg) : renderList(items.slice(0, 6), cfg)}
+      ${cfg.layout === 'grid' ? renderGrid(displayed, cfg) : renderList(displayed, cfg)}
     </section>`
   }
 
@@ -213,13 +221,11 @@ function filterCategory(cat) {
 
   if (cat === 'om') { renderAbout(); return }
 
-  const filtered = cat === 'alle'
-    ? allArticles
-    : allArticles.filter(a => getCatForArticle(a) === cat)
-
-  renderSections(cat === 'alle' ? allArticles : filtered)
-
-  if (cat !== 'alle') {
+  if (cat === 'alle') {
+    renderSections(allArticles, null)
+  } else {
+    // Show ALL articles in this category, hide others
+    renderSections(allArticles, cat)
     document.querySelectorAll('.cat-section').forEach(s => {
       s.style.display = s.dataset.section === cat ? '' : 'none'
     })

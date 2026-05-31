@@ -394,6 +394,7 @@ img { max-width: 100%; display: block; }
 .ci-blue   { background: var(--blue); }
 .ci-green  { background: var(--green); }
 .ci-purple { background: var(--purple); }
+.ci-orange { background: #b5713a; }
 
 .cat-name {
   font-size: 13px;
@@ -461,6 +462,7 @@ img { max-width: 100%; display: block; }
 .tg-blue   { color: rgba(74,122,181,0.5); }
 .tg-green  { color: rgba(74,138,90,0.5); }
 .tg-purple { color: rgba(122,90,181,0.5); }
+.tg-orange { color: rgba(181,113,58,0.7); }
 
 .cgi-date { font-size: 9px; color: var(--text-4); }
 .cgi-title {
