@@ -42,6 +42,14 @@ function excerpt(html, len = 120) {
   return stripHtml(html).slice(0, len).trim() + '…'
 }
 
+// ─── Extract first image from body or heroImage ───────────
+function firstImage(article) {
+  if (article.heroImage) return article.heroImage
+  if (!article.body) return null
+  const match = article.body.match(/<img[^>]+src=["']([^"']+)["']/i)
+  return match ? match[1] : null
+}
+
 // ─── Target watermark SVG ─────────────────────────────────
 const targetSvg = `<svg viewBox="0 0 80 80" fill="none" aria-hidden="true">
   <circle cx="40" cy="40" r="38" stroke="#c9a84c" stroke-width="0.8"/>
@@ -139,9 +147,11 @@ function renderSections(articles) {
 }
 
 function renderGrid(items, cfg) {
-  return `<div class="cat-grid">${items.map((a, i) => `
+  return `<div class="cat-grid">${items.map((a, i) => {
+    const img = firstImage(a)
+    return `
     <div class="cg-item" data-id="${a.id}">
-      ${a.heroImage ? `<img class="cg-item-img" src="${a.heroImage}" alt="${a.title}" loading="lazy">` : ''}
+      ${img ? `<img class="cg-item-img" src="${img}" alt="${a.title}" loading="lazy">` : '<div class="cg-item-img-placeholder"></div>'}
       <div class="cg-num">0${i+1}</div>
       <div class="cgi-eyebrow">
         <span class="cgi-tag ${cfg.tagClass}">${a.category || 'Artikkel'}</span>
@@ -149,7 +159,7 @@ function renderGrid(items, cfg) {
       </div>
       <div class="cgi-title">${a.title}</div>
       <div class="cgi-excerpt">${excerpt(a.body || '', 100)}</div>
-    </div>`).join('')}</div>`
+    </div>`}).join('')}</div>`
 }
 
 function renderList(items, cfg) {
