@@ -987,3 +987,212 @@ img { max-width: 100%; display: block; }
   .magazine-grid { grid-template-columns: 1fr; }
   .card-big { min-height: 280px; }
 }
+
+/* =====================
+   MOBILE BOTTOM NAV
+   ===================== */
+.mobile-bottom-nav {
+  display: none;
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  height: 64px;
+  background: rgba(8,8,8,0.97);
+  border-top: 1px solid #1e1e1e;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  z-index: 200;
+  padding: 0 4px;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.mobile-bottom-nav-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  height: 100%;
+}
+.mob-nav-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  flex: 1;
+  height: 100%;
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 8px 2px;
+  position: relative;
+  -webkit-tap-highlight-color: transparent;
+}
+.mob-nav-btn svg {
+  width: 22px; height: 22px;
+  stroke: #444;
+  fill: none;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: stroke 0.2s;
+  flex-shrink: 0;
+}
+.mob-nav-btn span {
+  font-size: 9px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #444;
+  transition: color 0.2s;
+  white-space: nowrap;
+}
+.mob-nav-btn.active svg { stroke: var(--gold); }
+.mob-nav-btn.active span { color: var(--gold); }
+.mob-nav-btn:active svg { stroke: var(--gold); opacity: 0.7; }
+
+/* Active indicator dot */
+.mob-nav-btn.active::before {
+  content: '';
+  position: absolute;
+  top: 6px;
+  width: 4px; height: 4px;
+  border-radius: 50%;
+  background: var(--gold);
+}
+
+@media (max-width: 900px) {
+  .mobile-bottom-nav { display: flex; flex-direction: column; justify-content: center; }
+  .nav-mobile-toggle { display: none; }
+  .mobile-menu { display: none !important; }
+  body { padding-bottom: 64px; }
+  /* No side scroll */
+  html, body { overflow-x: hidden; max-width: 100vw; }
+  * { max-width: 100%; }
+  .hero-target { display: none; }
+}
+
+/* =====================
+   COOL DETAILS
+   ===================== */
+
+/* Animated gold line under section headers */
+.cat-header {
+  position: relative;
+}
+.cat-header::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0;
+  height: 1px;
+  width: 0;
+  background: var(--gold);
+  transition: width 0.4s ease;
+  opacity: 0.4;
+}
+.cat-section:hover .cat-header::after { width: 100%; }
+
+/* Pulse on active nav */
+.nav-cat.active {
+  position: relative;
+}
+.nav-cat.active::after {
+  animation: goldPulse 2s ease-in-out infinite;
+}
+@keyframes goldPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* Card hover lift */
+.card-big, .card-small {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.card-big:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+}
+.card-small:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+}
+
+/* Gold shimmer on logo */
+.logo {
+  position: relative;
+}
+.logo em {
+  position: relative;
+  display: inline-block;
+}
+.logo em::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent 0%, rgba(201,168,76,0.4) 50%, transparent 100%);
+  background-size: 200% 100%;
+  animation: shimmer 3s ease-in-out infinite;
+  mix-blend-mode: overlay;
+}
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* Subtle scan-line texture on hero */
+.hero::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 3px,
+    rgba(0,0,0,0.04) 3px,
+    rgba(0,0,0,0.04) 4px
+  );
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Section counter — decorative number top-right */
+.cat-section {
+  position: relative;
+  counter-increment: section-counter;
+}
+
+/* Wide list hover glow */
+.wl-item {
+  transition: background 0.15s ease;
+}
+.wl-item:hover {
+  background: #0d0d0d;
+  border-left: 2px solid var(--gold);
+  padding-left: calc(2.5rem - 2px);
+}
+
+/* No horizontal overflow anywhere */
+html { overflow-x: hidden; }
+body { overflow-x: hidden; }
+.site, #app { overflow-x: hidden; }
+.magazine-grid, .cat-grid { overflow: hidden; }
+img { max-width: 100%; height: auto; }
+
+/* Smooth scroll */
+html { scroll-behavior: smooth; }
+
+/* Mobile fixes */
+@media (max-width: 600px) {
+  .magazine-grid { grid-template-columns: 1fr; gap: 1px; }
+  .card-big { min-height: 260px; }
+  .card-stack { gap: 1px; }
+  .hero { height: 320px; }
+  .hero-name { font-size: 28px; }
+  .hero-eyebrow { font-size: 9px; }
+  .hero-pills { flex-wrap: wrap; gap: 6px; }
+  .pill { font-size: 9px; padding: 4px 10px; }
+  .cat-header { padding: 1rem 1rem; }
+  .cat-name { font-size: 12px; }
+  .wl-item { padding: 0.9rem 1rem; }
+  .foot { display: none; }
+  .foot-bottom { padding: 1rem; font-size: 9px; }
+  .modal-content { padding: 1.5rem 1.25rem 3rem; }
+  .modal-title { font-size: 22px; }
+  .modal-topbar { padding: 0.75rem 1.25rem; }
+}

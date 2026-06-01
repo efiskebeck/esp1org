@@ -215,7 +215,7 @@ function renderAbout() {
 // ─── Filter ────────────────────────────────────────────────
 function filterCategory(cat) {
   activeCategory = cat
-  document.querySelectorAll('.nav-cat, .mobile-menu button').forEach(btn => {
+  document.querySelectorAll('.nav-cat, .mobile-menu button, .mob-nav-btn').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.cat === cat)
   })
 
