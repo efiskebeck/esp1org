@@ -89,14 +89,18 @@ function renderSections(articles, singleCat = null) {
     if (groups[cat]) groups[cat].push(a)
   }
 
+  // Single category — render full category page
+  if (singleCat && groups[singleCat]) {
+    main.innerHTML = renderCategoryPage(singleCat, CAT_CONFIG[singleCat], groups[singleCat])
+    return
+  }
+
+  // All categories — preview mode
   let html = ''
   for (const [key, cfg] of Object.entries(CAT_CONFIG)) {
     const items = groups[key]
     if (!items.length) continue
-    // When showing a single category, show all items; otherwise preview
-    const showAll = singleCat === key
     const preview = cfg.layout === 'grid' ? 3 : 6
-    const displayed = showAll ? items : items.slice(0, preview)
 
     html += `<section class="cat-section" data-section="${key}">
       <div class="cat-header">
@@ -105,15 +109,119 @@ function renderSections(articles, singleCat = null) {
           <div class="cat-name">${cfg.label}</div>
           <div class="cat-count">${items.length} innlegg</div>
         </div>
-        ${!showAll && items.length > preview
+        ${items.length > preview
           ? `<div class="cat-see-all" data-cat="${key}">Se alle ${items.length} →</div>`
           : ''}
       </div>
-      ${cfg.layout === 'grid' ? renderGrid(displayed, cfg) : renderList(displayed, cfg)}
+      ${cfg.layout === 'grid' ? renderGrid(items.slice(0, preview), cfg) : renderList(items.slice(0, preview), cfg)}
     </section>`
   }
 
   main.innerHTML = html || '<p style="padding:3rem;color:#333;text-align:center">Ingen innlegg funnet.</p>'
+}
+
+// ─── Full category page ────────────────────────────────────
+function renderCategoryPage(key, cfg, items) {
+  if (!items.length) return '<p style="padding:3rem;color:#333;text-align:center">Ingen innlegg.</p>'
+
+  const featured = items.slice(0, 3)
+  const archive  = items.slice(3)
+
+  // Featured: 1 big + 2 portrait cards
+  const [f1, f2, f3] = featured
+  const f1img = firstImage(f1)
+  const f2img = f2 ? firstImage(f2) : null
+  const f3img = f3 ? firstImage(f3) : null
+
+  const featuredHtml = `
+    <div class="catpage-featured">
+      <div class="catpage-big" data-id="${f1.id}">
+        ${f1img
+          ? `<img class="catpage-big-img" src="${f1img}" alt="${f1.title}" loading="lazy">`
+          : `<div class="catpage-big-placeholder">${targetSvg}</div>`}
+        <div class="catpage-big-overlay"></div>
+        <div class="corner-tl"></div>
+        <div class="corner-br"></div>
+        <div class="catpage-big-body">
+          <div class="card-eyebrow">
+            <span class="card-cat ${cfg.tagClass}">${cfg.label}</span>
+            <span class="card-date">${fmtDate(f1.date)}</span>
+          </div>
+          <div class="catpage-big-title">${f1.title}</div>
+          <div class="catpage-big-excerpt">${excerpt(f1.body || '', 160)}</div>
+          <div class="card-read">Les innlegget →</div>
+        </div>
+      </div>
+      <div class="catpage-portraits">
+        ${f2 ? `
+        <div class="catpage-portrait" data-id="${f2.id}">
+          ${f2img
+            ? `<img class="catpage-portrait-img" src="${f2img}" alt="${f2.title}" loading="lazy">`
+            : `<div class="catpage-portrait-placeholder"></div>`}
+          <div class="catpage-portrait-body">
+            <div class="card-eyebrow">
+              <span class="card-cat ${cfg.tagClass}">${cfg.label}</span>
+              <span class="card-date">${fmtDate(f2.date)}</span>
+            </div>
+            <div class="catpage-portrait-title">${f2.title}</div>
+          </div>
+        </div>` : ''}
+        ${f3 ? `
+        <div class="catpage-portrait" data-id="${f3.id}">
+          ${f3img
+            ? `<img class="catpage-portrait-img" src="${f3img}" alt="${f3.title}" loading="lazy">`
+            : `<div class="catpage-portrait-placeholder"></div>`}
+          <div class="catpage-portrait-body">
+            <div class="card-eyebrow">
+              <span class="card-cat ${cfg.tagClass}">${cfg.label}</span>
+              <span class="card-date">${fmtDate(f3.date)}</span>
+            </div>
+            <div class="catpage-portrait-title">${f3.title}</div>
+          </div>
+        </div>` : ''}
+      </div>
+    </div>`
+
+  // Archive list with thumbnails
+  const archiveHtml = archive.length ? `
+    <div class="catpage-archive">
+      <div class="catpage-archive-header">
+        <div class="catpage-archive-line"></div>
+        <span class="catpage-archive-label">Arkiv — ${archive.length} innlegg</span>
+        <div class="catpage-archive-line"></div>
+      </div>
+      <div class="catpage-archive-list">
+        ${archive.map((a, i) => {
+          const img = firstImage(a)
+          return `
+          <div class="catpage-archive-item" data-id="${a.id}">
+            <div class="catpage-archive-num">${String(i + 4).padStart(2, '0')}</div>
+            ${img
+              ? `<img class="catpage-archive-thumb" src="${img}" alt="${a.title}" loading="lazy">`
+              : `<div class="catpage-archive-thumb-empty"></div>`}
+            <div class="catpage-archive-info">
+              <div class="catpage-archive-title">${a.title}</div>
+              <div class="catpage-archive-meta">${fmtDate(a.date)}</div>
+            </div>
+            <div class="catpage-archive-arrow">→</div>
+          </div>`
+        }).join('')}
+      </div>
+    </div>` : ''
+
+  return `
+    <section class="catpage" data-section="${key}">
+      <div class="catpage-header">
+        <div class="catpage-header-left">
+          <div class="cat-icon-line ${cfg.color}"></div>
+          <div class="catpage-headline">${cfg.label}</div>
+          <div class="cat-count">${items.length} innlegg</div>
+        </div>
+        <button class="catpage-back" data-cat="alle">← Alle kategorier</button>
+      </div>
+      ${featuredHtml}
+      ${archiveHtml}
+    </section>`
 }
 
 // ─── Magazine-style grid ───────────────────────────────────
