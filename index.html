@@ -109,7 +109,48 @@
       <span class="foot-copy">Vite · Firebase · GitHub Pages</span>
     </div>
 
-  </div>
+
+    <!-- MOBILE BOTTOM NAV -->
+    <nav class="mobile-bottom-nav" id="mobileBottomNav" aria-label="Mobilnavigasjon">
+      <div class="mobile-bottom-nav-inner">
+
+        <button class="mob-nav-btn active" data-cat="alle" aria-label="Alle">
+          <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+          <span>Alle</span>
+        </button>
+
+        <button class="mob-nav-btn" data-cat="skyting" aria-label="Skyting">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"/><line x1="12" y1="2" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="2" y1="12" x2="5" y2="12"/><line x1="19" y1="12" x2="22" y2="12"/></svg>
+          <span>Skyting</span>
+        </button>
+
+        <button class="mob-nav-btn" data-cat="reisebrev" aria-label="Reisebrev">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="12" y1="3" x2="12" y2="21"/><path d="M3 12 Q7 8 12 12 Q17 16 21 12"/><path d="M3 12 Q7 16 12 12 Q17 8 21 12"/></svg>
+          <span>Reisebrev</span>
+        </button>
+
+        <button class="mob-nav-btn" data-cat="forsvaret" aria-label="Forsvaret">
+          <svg viewBox="0 0 24 24"><path d="M12 2 L20 6 L20 13 C20 17.4 16.4 21.1 12 22 C7.6 21.1 4 17.4 4 13 L4 6 Z"/></svg>
+          <span>Forsvaret</span>
+        </button>
+
+        <button class="mob-nav-btn" data-cat="ledelse" aria-label="Ledelse">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="7" r="4"/><path d="M4 20 C4 16.7 7.6 14 12 14 C16.4 14 20 16.7 20 20"/><polyline points="16 3 18 5 22 1"/></svg>
+          <span>Ledelse</span>
+        </button>
+
+        <button class="mob-nav-btn" data-cat="refleksjon" aria-label="Refleksjon">
+          <svg viewBox="0 0 24 24"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 1 7 7c0 2.4-1.2 4.5-3 5.7V17H8v-2.3C6.2 13.5 5 11.4 5 9a7 7 0 0 1 7-7z"/></svg>
+          <span>Refleksjon</span>
+        </button>
+
+        <button class="mob-nav-btn" data-cat="om" aria-label="Om meg">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20 C4 16.7 7.6 14 12 14 C16.4 14 20 16.7 20 20"/></svg>
+          <span>Om meg</span>
+        </button>
+
+      </div>
+    </nav>
 
   <!-- ARTICLE MODAL -->
   <div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
