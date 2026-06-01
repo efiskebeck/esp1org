@@ -380,3 +380,176 @@
 }
 .save-status.ok   { color: #3a8a3a; }
 .save-status.err  { color: #e05; }
+
+/* =====================
+   MOBILE ADMIN
+   ===================== */
+@media (max-width: 768px) {
+
+  /* Nav */
+  .admin-nav {
+    padding: 0 1rem;
+    height: 52px;
+  }
+  .admin-nav-center {
+    gap: 4px;
+  }
+  .admin-tab {
+    font-size: 11px;
+    padding: 5px 10px;
+  }
+  .admin-user { display: none; }
+  .admin-logout {
+    font-size: 10px;
+    padding: 4px 8px;
+  }
+
+  /* Toolbar — horizontal scroll */
+  .editor-toolbar {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    -webkit-overflow-scrolling: touch;
+    padding: 0.5rem 0;
+    gap: 6px;
+  }
+  .editor-toolbar::-webkit-scrollbar { display: none; }
+  .tb-btn {
+    flex-shrink: 0;
+    font-size: 13px;
+    padding: 6px 12px;
+    min-height: 36px;
+  }
+  .tb-sep { flex-shrink: 0; }
+
+  /* Editor: stack vertically */
+  .editor-wrap {
+    grid-template-columns: 1fr;
+    min-height: unset;
+  }
+  .editor-main {
+    padding: 1rem;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+  }
+  .editor-title-input {
+    font-size: 20px;
+    padding: 0.5rem 0;
+  }
+  .editor-meta-row {
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+  .editor-select,
+  .editor-input {
+    width: 100%;
+    font-size: 14px;
+    padding: 0.65rem 0.75rem;
+    min-height: 44px;
+  }
+  .editor-body {
+    min-height: 280px;
+    font-size: 15px;
+    padding: 0.5rem 0;
+  }
+  .editor-preview {
+    font-size: 15px;
+  }
+
+  /* Sidebar: full width below editor */
+  .editor-sidebar {
+    background: var(--bg);
+    border-top: 1px solid var(--border);
+    padding: 1rem;
+    gap: 0;
+  }
+  .sidebar-section {
+    padding: 1rem 0;
+  }
+  .sidebar-label {
+    font-size: 11px;
+    margin-bottom: 0.5rem;
+  }
+
+  /* Sticky save button */
+  .sidebar-actions {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    padding: 0.75rem 1rem;
+    background: rgba(8,8,8,0.97);
+    border-top: 1px solid var(--border-2);
+    backdrop-filter: blur(8px);
+    flex-direction: row;
+    gap: 0.75rem;
+    z-index: 50;
+    padding-bottom: calc(0.75rem + env(safe-area-inset-bottom));
+  }
+  .save-btn {
+    flex: 1;
+    padding: 0.85rem;
+    font-size: 13px;
+  }
+  .delete-btn {
+    flex: 0 0 auto;
+    width: auto;
+    padding: 0.85rem 1.25rem;
+    font-size: 11px;
+  }
+  .save-status {
+    display: none;
+  }
+
+  /* Article list */
+  .admin-toolbar {
+    flex-direction: column;
+    padding: 1rem;
+    gap: 0.75rem;
+  }
+  .admin-search,
+  .admin-filter {
+    width: 100%;
+    font-size: 14px;
+    min-height: 44px;
+  }
+  .ali-item {
+    padding: 0.85rem 1rem;
+    min-height: 60px;
+  }
+  .ali-title { font-size: 14px; }
+  .ali-meta  { font-size: 11px; }
+  .ali-cat   { display: none; }
+  .ali-edit  {
+    font-size: 12px;
+    padding: 6px 12px;
+    min-height: 36px;
+    display: flex;
+    align-items: center;
+  }
+
+  /* Image preview */
+  .image-preview img { max-height: 140px; object-fit: cover; }
+  .gallery-preview img { width: 72px; height: 72px; }
+
+  /* Toggle */
+  .toggle-label { gap: 12px; }
+  .toggle-text  { font-size: 14px; }
+  .toggle-track { width: 44px; height: 24px; }
+  .toggle-track::after { width: 18px; height: 18px; top: 3px; left: 3px; }
+  .toggle-input:checked + .toggle-track::after { transform: translateX(20px); }
+
+  /* Login */
+  .login-box {
+    width: 100%;
+    margin: 1rem;
+    padding: 2rem 1.5rem;
+  }
+  .login-box input { min-height: 44px; font-size: 16px; }
+  .login-btn { min-height: 48px; font-size: 14px; }
+
+  /* Body padding for sticky bar */
+  #adminPanel { padding-bottom: 80px; }
+}
+
+@media (max-width: 400px) {
+  .admin-tab { font-size: 10px; padding: 4px 8px; }
+  .editor-title-input { font-size: 18px; }
+}
