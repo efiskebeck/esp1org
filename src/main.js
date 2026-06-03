@@ -422,13 +422,26 @@ function openArticle(articleId) {
       <div class="comment-body">${c.body}</div>
     </div>`).join('') || '<p style="font-size:12px;color:#333;padding:0.5rem 0">Ingen kommentarer ennå.</p>'
 
+  // Update URL so the article is shareable/bookmarkable
+  history.pushState({ articleId }, '', `?id=${articleId}`)
+
   // Build modal with newspaper style
   const panel = document.getElementById('modalPanel')
   panel.innerHTML = `
     <div class="modal-topbar">
       <div class="modal-topbar-logo">esp<em>1</em>.org</div>
       <div class="modal-topbar-cat">${article.category || 'Artikkel'}</div>
-      <button class="modal-close" id="modalClose" aria-label="Lukk">✕</button>
+      <div class="modal-topbar-actions">
+        <button class="modal-share-btn" id="shareBtn" aria-label="Del artikkel" title="Del artikkel">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+            <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+          </svg>
+          <span class="share-feedback" id="shareFeedback"></span>
+        </button>
+        <button class="modal-close" id="modalClose" aria-label="Lukk">✕</button>
+      </div>
     </div>
     <div class="modal-content" id="modalContent">
       <div class="modal-eyebrow">${article.category || 'Artikkel'}</div>
@@ -449,6 +462,39 @@ function openArticle(articleId) {
     </div>`
   // Re-attach close button
   document.getElementById('modalClose').addEventListener('click', closeModal)
+
+  // Share button
+  document.getElementById('shareBtn').addEventListener('click', async () => {
+    const url = `${location.origin}${location.pathname}?id=${articleId}`
+    const feedback = document.getElementById('shareFeedback')
+
+    // Use native share sheet on mobile if available
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: article.title, url })
+        return
+      } catch { /* user cancelled — fall through to clipboard */ }
+    }
+
+    // Desktop: copy to clipboard
+    try {
+      await navigator.clipboard.writeText(url)
+    } catch {
+      // Fallback for older browsers
+      const ta = document.createElement('textarea')
+      ta.value = url
+      ta.style.position = 'fixed'
+      ta.style.opacity  = '0'
+      document.body.appendChild(ta)
+      ta.select()
+      document.execCommand('copy')
+      document.body.removeChild(ta)
+    }
+
+    feedback.textContent = 'Kopiert!'
+    feedback.classList.add('visible')
+    setTimeout(() => feedback.classList.remove('visible'), 2000)
+  })
 
   modal.classList.add('open')
   document.body.style.overflow = 'hidden'
@@ -474,6 +520,7 @@ function openArticle(articleId) {
 function closeModal() {
   document.getElementById('modal').classList.remove('open')
   document.body.style.overflow = ''
+  history.pushState(null, '', location.pathname)
 }
 
 // ─── Events ────────────────────────────────────────────────
@@ -520,6 +567,10 @@ async function init() {
   try {
     allArticles = await fetchArticles()
     renderSections(allArticles)
+
+    // Open article if URL contains ?id=
+    const urlId = new URLSearchParams(location.search).get('id')
+    if (urlId) openArticle(urlId)
   } catch (err) {
     console.error('Firebase error:', err)
     // If cache exists, try to use it even on error

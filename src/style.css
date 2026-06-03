@@ -1490,3 +1490,53 @@ html { scroll-behavior: smooth; }
   .skeleton-card-sm  { height: 80px; }
   .skeleton-stack { flex-direction: row; }
 }
+
+/* ─── MODAL SHARE BUTTON ─────────────────────────────────── */
+.modal-topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.modal-share-btn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1px solid var(--border-2);
+  background: none;
+  color: var(--text-3);
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s;
+  flex-shrink: 0;
+}
+.modal-share-btn:hover {
+  color: var(--gold);
+  border-color: rgba(201,168,76,0.4);
+}
+.modal-share-btn svg {
+  width: 15px;
+  height: 15px;
+}
+
+.share-feedback {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--bg-2);
+  border: 1px solid var(--border-2);
+  color: var(--gold);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+  padding: 3px 8px;
+  border-radius: 4px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.share-feedback.visible { opacity: 1; }
