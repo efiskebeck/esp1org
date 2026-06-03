@@ -8,6 +8,12 @@
   <meta name="theme-color" content="#070707">
   <link rel="stylesheet" href="/src/style.css" />
   <link rel="stylesheet" href="/src/admin.css" />
+  <!-- Cropper.js -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
+  <!-- SortableJS for gallery drag-and-drop -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.2/Sortable.min.js"></script>
+  <!-- Cropper.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
 </head>
 <body>
   <div id="adminApp">
@@ -50,8 +56,7 @@
             <option value="skyting">Skyting</option>
             <option value="militær">Militær</option>
             <option value="ledelse">Ledelse</option>
-              <option value="refleksjon">Refleksjon</option>
-            
+            <option value="refleksjon">Refleksjon</option>
           </select>
         </div>
         <div id="articleList" class="article-list-admin">
@@ -70,10 +75,9 @@
               <select id="editCategory" class="editor-select">
                 <option value="skyting">Skyting</option>
                 <option value="reisebrev">Reisebrev</option>
-              <option value="forsvaret">Forsvaret</option>
+                <option value="forsvaret">Forsvaret</option>
                 <option value="ledelse">Ledelse</option>
-              <option value="refleksjon">Refleksjon</option>
-                
+                <option value="refleksjon">Refleksjon</option>
               </select>
               <input type="text" id="editTags" class="editor-input" placeholder="Tags (kommaseparert)">
               <input type="date" id="editDate" class="editor-input">
@@ -96,20 +100,105 @@
             <div id="previewBody"   class="editor-preview" style="display:none"></div>
           </div>
 
+          <!-- ═══ SIDEBAR ═══ -->
           <div class="editor-sidebar">
+
+            <!-- HERO IMAGE -->
             <div class="sidebar-section">
               <div class="sidebar-label">Hero-bilde</div>
-              <input type="file" id="heroImageFile" accept="image/*" class="editor-file">
+
+              <!-- Drop zone -->
+              <div id="heroDropZone" class="drop-zone" title="Dra bilde hit, lim inn, eller velg fil">
+                <div class="drop-zone-icon">🖼</div>
+                <div class="drop-zone-text">Dra &amp; slipp, lim inn<br><span>eller velg metode under</span></div>
+              </div>
+
+              <!-- Upload methods row -->
+              <div class="upload-methods">
+                <label class="upload-method-btn" title="Velg fil">
+                  📁 Fil
+                  <input type="file" id="heroImageFile" accept="image/*" class="hidden-input">
+                </label>
+                <label class="upload-method-btn" title="Ta bilde med kamera" id="heroCameraLabel">
+                  📷 Kamera
+                  <input type="file" id="heroImageCamera" accept="image/*" capture="environment" class="hidden-input">
+                </label>
+                <button type="button" class="upload-method-btn" id="heroUrlBtn" title="Lim inn URL">🔗 URL</button>
+              </div>
+
+              <!-- URL input (hidden by default) -->
+              <input type="text" id="heroImageUrl" class="editor-input hero-url-input" placeholder="https://…" style="display:none">
+
+              <!-- Upload progress -->
+              <div id="heroProgress" class="upload-progress" style="display:none">
+                <div class="upload-progress-bar" id="heroProgressBar"></div>
+                <span id="heroProgressText">0%</span>
+              </div>
+
+              <!-- Preview + controls -->
               <div id="heroImagePreview" class="image-preview"></div>
-              <input type="text" id="heroImageUrl" class="editor-input" placeholder="…eller lim inn URL">
+
+              <!-- Hero position picker (shown after image) -->
+              <div id="heroPositionWrap" class="hero-position-wrap" style="display:none">
+                <div class="sidebar-label" style="margin-top:0.5rem">Bildeposisjon</div>
+                <div class="position-grid" id="heroPositionGrid">
+                  <button class="pos-btn" data-pos="top left">↖</button>
+                  <button class="pos-btn" data-pos="top center">↑</button>
+                  <button class="pos-btn" data-pos="top right">↗</button>
+                  <button class="pos-btn" data-pos="center left">←</button>
+                  <button class="pos-btn active" data-pos="center center">·</button>
+                  <button class="pos-btn" data-pos="center right">→</button>
+                  <button class="pos-btn" data-pos="bottom left">↙</button>
+                  <button class="pos-btn" data-pos="bottom center">↓</button>
+                  <button class="pos-btn" data-pos="bottom right">↘</button>
+                </div>
+                <button type="button" id="heroCropBtn" class="crop-trigger-btn">✂ Beskjær bilde</button>
+              </div>
             </div>
 
+            <!-- GALLERY -->
             <div class="sidebar-section">
               <div class="sidebar-label">Galleri</div>
-              <input type="file" id="galleryFiles" accept="image/*" multiple class="editor-file">
-              <div id="galleryPreview" class="gallery-preview"></div>
+
+              <!-- Gallery drop zone -->
+              <div id="galleryDropZone" class="drop-zone drop-zone-sm" title="Dra bilder hit">
+                <div class="drop-zone-icon">🗂</div>
+                <div class="drop-zone-text">Dra bilder hit</div>
+              </div>
+
+              <div class="upload-methods">
+                <label class="upload-method-btn" title="Velg filer">
+                  📁 Filer
+                  <input type="file" id="galleryFiles" accept="image/*" multiple class="hidden-input">
+                </label>
+                <label class="upload-method-btn" title="Ta bilder med kamera">
+                  📷 Kamera
+                  <input type="file" id="galleryCamera" accept="image/*" capture="environment" class="hidden-input">
+                </label>
+              </div>
+
+              <!-- Gallery upload progress -->
+              <div id="galleryProgress" class="upload-progress" style="display:none">
+                <div class="upload-progress-bar" id="galleryProgressBar"></div>
+                <span id="galleryProgressText">0 / 0</span>
+              </div>
+
+              <!-- Layout selector -->
+              <div class="gallery-layout-selector" id="galleryLayoutSelector" style="display:none">
+                <div class="sidebar-label" style="margin-top:0.25rem">Visning</div>
+                <div class="layout-btns">
+                  <button class="layout-btn active" data-layout="grid" title="Rutenett">⊞ Rutenett</button>
+                  <button class="layout-btn" data-layout="masonry" title="Masonry">⧉ Masonry</button>
+                  <button class="layout-btn" data-layout="carousel" title="Karusell">▷ Karusell</button>
+                </div>
+              </div>
+
+              <!-- Gallery preview (sortable) -->
+              <div id="galleryPreview" class="gallery-preview sortable-gallery"></div>
+              <div id="galleryHint" class="gallery-hint" style="display:none">Dra for å endre rekkefølge · Klikk × for å fjerne</div>
             </div>
 
+            <!-- PUBLISERING -->
             <div class="sidebar-section">
               <div class="sidebar-label">Publisering</div>
               <label class="toggle-label">
@@ -124,10 +213,57 @@
               <button id="deleteBtn" class="delete-btn" style="display:none">Slett artikkel</button>
             </div>
             <div id="saveStatus" class="save-status"></div>
-          </div>
+          </div><!-- /editor-sidebar -->
         </div>
       </div>
 
+    </div>
+  </div>
+
+  <!-- ══ CROP MODAL ══ -->
+  <div id="cropModal" class="crop-modal" style="display:none">
+    <div class="crop-modal-inner">
+      <div class="crop-modal-header">
+        <span>Beskjær bilde</span>
+        <div class="crop-modal-tools">
+          <button type="button" class="crop-tool-btn" id="cropRotateLeft"  title="Roter venstre">↺</button>
+          <button type="button" class="crop-tool-btn" id="cropRotateRight" title="Roter høyre">↻</button>
+          <button type="button" class="crop-tool-btn" id="cropFlipH"       title="Speilvend">⇔</button>
+          <select id="cropAspect" class="crop-aspect-select">
+            <option value="free">Fri</option>
+            <option value="16/9" selected>16:9</option>
+            <option value="4/3">4:3</option>
+            <option value="1/1">1:1</option>
+            <option value="3/2">3:2</option>
+          </select>
+        </div>
+      </div>
+      <div class="crop-canvas-wrap">
+        <img id="cropImage" alt="Crop">
+      </div>
+      <div class="crop-modal-footer">
+        <div class="crop-quality-wrap">
+          <label class="sidebar-label">Kvalitet</label>
+          <input type="range" id="cropQuality" min="60" max="100" value="90" class="quality-slider">
+          <span id="cropQualityVal">90%</span>
+        </div>
+        <div class="crop-footer-actions">
+          <button type="button" id="cropCancel" class="crop-cancel-btn">Avbryt</button>
+          <button type="button" id="cropApply"  class="crop-apply-btn">✓ Bruk</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ALT TEXT MODAL -->
+  <div id="altModal" class="alt-modal" style="display:none">
+    <div class="alt-modal-inner">
+      <div class="alt-modal-title">Alt-tekst for bilde</div>
+      <input type="text" id="altTextInput" class="editor-input" placeholder="Beskriv bildet for skjermlesere…">
+      <div class="alt-modal-actions">
+        <button type="button" id="altCancel" class="crop-cancel-btn">Avbryt</button>
+        <button type="button" id="altSave"   class="crop-apply-btn">✓ Lagre</button>
+      </div>
     </div>
   </div>
 
