@@ -70,12 +70,79 @@ const targetSvg = `<svg viewBox="0 0 80 80" fill="none" aria-hidden="true">
 </svg>`
 
 // ─── Fetch all articles ────────────────────────────────────
-async function fetchArticles() {
-  const q = query(collection(db, 'articles'), orderBy('date', 'desc'))
+// ─── Cache helpers ─────────────────────────────────────────
+const CACHE_KEY = 'esp1_articles_v1'
+const CACHE_TTL = 5 * 60 * 1000  // 5 minutes
+
+function cacheRead() {
+  try {
+    const raw = localStorage.getItem(CACHE_KEY)
+    if (!raw) return null
+    const { ts, data } = JSON.parse(raw)
+    // Deserialise Firestore Timestamps stored as { _seconds, _nanoseconds }
+    return data.map(a => ({
+      ...a,
+      date: a.date?._seconds ? { toDate: () => new Date(a.date._seconds * 1000) } : a.date
+    }))
+  } catch { return null }
+}
+
+function cacheWrite(articles) {
+  try {
+    // Serialise Timestamp objects so they survive JSON round-trip
+    const serialised = articles.map(a => ({
+      ...a,
+      date: a.date?.toDate
+        ? { _seconds: Math.floor(a.date.toDate().getTime() / 1000) }
+        : a.date
+    }))
+    localStorage.setItem(CACHE_KEY, JSON.stringify({ ts: Date.now(), data: serialised }))
+  } catch { /* storage full or private mode — ignore */ }
+}
+
+function cacheIsFresh() {
+  try {
+    const raw = localStorage.getItem(CACHE_KEY)
+    if (!raw) return false
+    return (Date.now() - JSON.parse(raw).ts) < CACHE_TTL
+  } catch { return false }
+}
+
+async function fetchFromFirebase() {
+  const q    = query(collection(db, 'articles'), orderBy('date', 'desc'))
   const snap = await getDocs(q)
   return snap.docs
     .map(d => ({ id: d.id, ...d.data() }))
     .filter(a => a.published === true)
+}
+
+async function fetchArticles() {
+  const cached = cacheRead()
+
+  if (cached) {
+    // Show cached data immediately — revalidate in background if stale
+    if (!cacheIsFresh()) {
+      fetchFromFirebase()
+        .then(fresh => {
+          cacheWrite(fresh)
+          // Silently update if data changed (compare count + first id)
+          if (
+            fresh.length !== allArticles.length ||
+            fresh[0]?.id !== allArticles[0]?.id
+          ) {
+            allArticles = fresh
+            renderSections(allArticles)
+          }
+        })
+        .catch(() => {/* network error — cached data stays */})
+    }
+    return cached
+  }
+
+  // No cache — must wait for Firebase (first visit or cleared storage)
+  const fresh = await fetchFromFirebase()
+  cacheWrite(fresh)
+  return fresh
 }
 
 // ─── Render sections ───────────────────────────────────────
@@ -427,13 +494,43 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal()
 
 // ─── Boot ──────────────────────────────────────────────────
 async function init() {
+  const hasCached = !!cacheRead()
+
+  // Show skeleton only if no cache (first visit)
+  if (!hasCached) {
+    document.getElementById('main').innerHTML = `
+      <div class="skeleton-wrap">
+        ${[1,2,3].map(() => `
+          <div class="skeleton-section">
+            <div class="skeleton-header">
+              <div class="skeleton-line sw-40"></div>
+              <div class="skeleton-line sw-16"></div>
+            </div>
+            <div class="skeleton-grid">
+              <div class="skeleton-card-big"></div>
+              <div class="skeleton-stack">
+                <div class="skeleton-card-sm"></div>
+                <div class="skeleton-card-sm"></div>
+              </div>
+            </div>
+          </div>`).join('')}
+      </div>`
+  }
+
   try {
     allArticles = await fetchArticles()
     renderSections(allArticles)
   } catch (err) {
     console.error('Firebase error:', err)
-    document.getElementById('main').innerHTML =
-      '<p style="padding:3rem;color:#444;text-align:center;font-size:12px">Kunne ikke laste innlegg.</p>'
+    // If cache exists, try to use it even on error
+    const fallback = cacheRead()
+    if (fallback) {
+      allArticles = fallback
+      renderSections(allArticles)
+    } else {
+      document.getElementById('main').innerHTML =
+        '<p style="padding:3rem;color:#444;text-align:center;font-size:12px">Kunne ikke laste innlegg.</p>'
+    }
   }
 }
 

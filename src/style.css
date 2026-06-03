@@ -1433,3 +1433,60 @@ html { scroll-behavior: smooth; }
   .catpage-headline { font-size: 16px; }
   .catpage-archive-item { gap: 0.75rem; }
 }
+
+/* ─── SKELETON LOADER ────────────────────────────────────── */
+.skeleton-wrap {
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 3rem;
+}
+.skeleton-section { display: flex; flex-direction: column; gap: 1rem; }
+.skeleton-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+.skeleton-grid {
+  display: grid;
+  grid-template-columns: 1fr 280px;
+  gap: 1rem;
+  height: 280px;
+}
+.skeleton-stack { display: flex; flex-direction: column; gap: 1rem; }
+
+/* Shimmer base */
+.skeleton-line,
+.skeleton-card-big,
+.skeleton-card-sm {
+  background: linear-gradient(
+    90deg,
+    var(--bg-2) 25%,
+    var(--bg-3) 50%,
+    var(--bg-2) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite;
+  border-radius: 6px;
+}
+.skeleton-line  { height: 14px; }
+.sw-40 { width: 40%; }
+.sw-16 { width: 16%; }
+.skeleton-card-big { flex: 1; border-radius: 8px; }
+.skeleton-card-sm  { flex: 1; border-radius: 6px; }
+
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+@media (max-width: 768px) {
+  .skeleton-grid {
+    grid-template-columns: 1fr;
+    height: auto;
+  }
+  .skeleton-card-big { height: 180px; }
+  .skeleton-card-sm  { height: 80px; }
+  .skeleton-stack { flex-direction: row; }
+}
