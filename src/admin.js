@@ -173,6 +173,7 @@ function openEditor(article) {
   setHeroPositionBtn(heroPosition)
 
   galleryItems = Array.isArray(article.gallery) ? [...article.gallery] : []
+  setTimeout(attachAllEditorImages, 0)
   renderGalleryPreview()
   initSortable()
 }
@@ -642,4 +643,120 @@ function setStatus(msg, cls = '') {
   const el = document.getElementById('saveStatus')
   el.textContent = msg
   el.className   = 'save-status' + (cls ? ' ' + cls : '')
+}
+
+// ─── Image resize in editor ────────────────────────────────
+let resizeState = null
+
+function attachResizeHandles(img) {
+  if (img.dataset.resizable) return
+  img.dataset.resizable = '1'
+  img.addEventListener('click', e => {
+    e.stopPropagation()
+    selectEditorImage(img)
+  })
+}
+
+function selectEditorImage(img) {
+  deselectEditorImage()
+  img.classList.add('img-selected')
+
+  const wrap = document.createElement('div')
+  wrap.className = 'img-resize-wrap'
+  wrap.contentEditable = 'false'
+  img.parentNode.insertBefore(wrap, img)
+  wrap.appendChild(img)
+
+  // Width indicator
+  const indicator = document.createElement('div')
+  indicator.className = 'img-resize-indicator'
+  indicator.textContent = img.offsetWidth + 'px'
+  wrap.appendChild(indicator)
+
+  // Four corner handles
+  ;['nw','ne','sw','se'].forEach(pos => {
+    const h = document.createElement('div')
+    h.className = `img-resize-handle img-handle-${pos}`
+    h.dataset.handle = pos
+    wrap.appendChild(h)
+
+    h.addEventListener('mousedown', e => {
+      e.preventDefault()
+      e.stopPropagation()
+      resizeState = {
+        img, wrap, indicator,
+        handle: pos,
+        startX: e.clientX,
+        startW: img.offsetWidth,
+      }
+      document.addEventListener('mousemove', onResizeMove)
+      document.addEventListener('mouseup',   onResizeUp)
+    })
+
+    h.addEventListener('touchstart', e => {
+      e.preventDefault()
+      const t = e.touches[0]
+      resizeState = {
+        img, wrap, indicator,
+        handle: pos,
+        startX: t.clientX,
+        startW: img.offsetWidth,
+      }
+      document.addEventListener('touchmove', onResizeTouchMove, { passive: false })
+      document.addEventListener('touchend',  onResizeTouchUp)
+    }, { passive: false })
+  })
+}
+
+function applyResize(clientX) {
+  if (!resizeState) return
+  const { img, wrap, indicator, handle, startX, startW } = resizeState
+  const sign = (handle === 'ne' || handle === 'se') ? 1 : -1
+  const newW = Math.max(60, Math.min(startW + sign * (clientX - startX), 1200))
+  img.style.width  = newW + 'px'
+  img.style.height = 'auto'
+  wrap.style.width = newW + 'px'
+  indicator.textContent = Math.round(newW) + 'px'
+  indicator.style.opacity = '1'
+}
+
+function onResizeMove(e)      { applyResize(e.clientX) }
+function onResizeTouchMove(e) { e.preventDefault(); applyResize(e.touches[0].clientX) }
+
+function onResizeUp() {
+  if (resizeState?.indicator) resizeState.indicator.style.opacity = '0'
+  resizeState = null
+  document.removeEventListener('mousemove', onResizeMove)
+  document.removeEventListener('mouseup',   onResizeUp)
+}
+function onResizeTouchUp() {
+  resizeState = null
+  document.removeEventListener('touchmove', onResizeTouchMove)
+  document.removeEventListener('touchend',  onResizeTouchUp)
+}
+
+function deselectEditorImage() {
+  document.querySelectorAll('.img-resize-wrap').forEach(wrap => {
+    const img = wrap.querySelector('img')
+    if (img) wrap.parentNode.insertBefore(img, wrap)
+    wrap.remove()
+  })
+  document.querySelectorAll('.img-selected').forEach(el => el.classList.remove('img-selected'))
+}
+
+document.getElementById('editorBody').addEventListener('click', e => {
+  if (!e.target.closest('img')) deselectEditorImage()
+})
+
+// Watch for new images inserted via paste/toolbar/upload
+const editorObserver = new MutationObserver(() => {
+  document.querySelectorAll('#editorBody img').forEach(attachResizeHandles)
+})
+editorObserver.observe(document.getElementById('editorBody'), {
+  childList: true, subtree: true,
+})
+
+// Call this after openEditor() to attach handles to existing images
+function attachAllEditorImages() {
+  document.querySelectorAll('#editorBody img').forEach(attachResizeHandles)
 }
