@@ -189,17 +189,17 @@ document.querySelectorAll('.tb-btn[data-cmd]').forEach(btn => {
       case 'italic': document.execCommand('italic'); break
       case 'h2': {
         const text = window.getSelection().toString() || 'Overskrift'
-        document.execCommand('insertHTML', false, `<h2>${text}</h2><p><br></p>`)
+        document.execCommand('insertHTML', false, `<h2>${escapeHtml(text)}</h2><p><br></p>`)
         break
       }
       case 'h3': {
         const text = window.getSelection().toString() || 'Overskrift'
-        document.execCommand('insertHTML', false, `<h3>${text}</h3><p><br></p>`)
+        document.execCommand('insertHTML', false, `<h3>${escapeHtml(text)}</h3><p><br></p>`)
         break
       }
       case 'quote': {
         const text = window.getSelection().toString() || 'Sitat'
-        document.execCommand('insertHTML', false, `<blockquote>${text}</blockquote><p><br></p>`)
+        document.execCommand('insertHTML', false, `<blockquote>${escapeHtml(text)}</blockquote><p><br></p>`)
         break
       }
       case 'link': {
@@ -209,12 +209,81 @@ document.querySelectorAll('.tb-btn[data-cmd]').forEach(btn => {
       }
       case 'insertImage': {
         const url = prompt('Bilde-URL:')
-        if (url) document.execCommand('insertHTML', false, `<img src="${url}" alt="">`)
+        if (url) {
+          const alt = prompt('Alt-tekst:', '') || ''
+          insertArticleImage(url.trim(), alt.trim())
+        }
         break
       }
     }
   })
 })
+
+const textColorPicker = document.getElementById('textColorPicker')
+const textBgColorPicker = document.getElementById('textBgColorPicker')
+
+if (textColorPicker) {
+  textColorPicker.addEventListener('input', e => {
+    document.getElementById('editorBody').focus()
+    document.execCommand('foreColor', false, e.target.value)
+  })
+}
+
+if (textBgColorPicker) {
+  textBgColorPicker.addEventListener('input', e => {
+    document.getElementById('editorBody').focus()
+    document.execCommand('hiliteColor', false, e.target.value)
+  })
+}
+
+function chooseImageLayout(current = 'full') {
+  const val = prompt(
+    'Bildeplassering:\nfull = full bredde\ncenter = midtstilt\nleft = venstre, tekst rundt\nright = høyre, tekst rundt\nbehind = bak tekst\nfront = foran tekst',
+    current
+  )
+  const allowed = ['full', 'center', 'left', 'right', 'behind', 'front']
+  return allowed.includes((val || '').trim().toLowerCase()) ? val.trim().toLowerCase() : current
+}
+
+function imageLayoutClass(layout) {
+  return `article-img article-img-${layout || 'full'}`
+}
+
+function insertArticleImage(url, alt = '', layout = null) {
+  const body = document.getElementById('editorBody')
+  body.focus()
+  const chosenLayout = layout || chooseImageLayout('full')
+  const html = `<img src="${escapeAttr(url)}" alt="${escapeAttr(alt)}" class="${imageLayoutClass(chosenLayout)}" data-layout="${chosenLayout}">`
+  document.execCommand('insertHTML', false, html)
+  setTimeout(attachAllEditorImages, 0)
+}
+
+async function copyTextToClipboard(text) {
+  try {
+    if (navigator.clipboard?.writeText) await navigator.clipboard.writeText(text)
+    else {
+      const ta = document.createElement('textarea')
+      ta.value = text
+      ta.style.position = 'fixed'
+      ta.style.opacity = '0'
+      document.body.appendChild(ta)
+      ta.select()
+      document.execCommand('copy')
+      document.body.removeChild(ta)
+    }
+    setStatus('✓ URL kopiert!', 'ok')
+  } catch {
+    prompt('Kopier URL:', text)
+  }
+}
+
+function escapeHtml(str = '') {
+  return String(str).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]))
+}
+
+function escapeAttr(str = '') {
+  return escapeHtml(str).replace(/'/g, '&#39;')
+}
 
 // Preview toggle
 let previewing = false
@@ -224,6 +293,7 @@ document.getElementById('previewToggle').addEventListener('click', () => {
   document.getElementById('previewBody').style.display  = previewing ? 'block' : 'none'
   document.getElementById('previewToggle').textContent  = previewing ? 'Rediger' : 'Forhåndsvisning'
   if (previewing) {
+    deselectEditorImage()
     document.getElementById('previewBody').innerHTML = document.getElementById('editorBody').innerHTML
   }
 })
@@ -325,9 +395,14 @@ function renderHeroPreview(url) {
   const preview = document.getElementById('heroImagePreview')
   preview.innerHTML = `
     <div class="hero-preview-wrap" style="--pos:${heroPosition}">
-      <img src="${url}" alt="Hero" class="hero-preview-img">
+      <img src="${escapeAttr(url)}" alt="Hero" class="hero-preview-img">
+      <button type="button" class="hero-copy-url-btn" title="Kopier bilde-URL">🔗 Kopier URL</button>
       <div class="hero-preview-label">Forhåndsvisning · posisjon: <span id="heroPosLabel">${heroPosition}</span></div>
     </div>`
+  preview.querySelector('.hero-copy-url-btn')?.addEventListener('click', e => {
+    e.stopPropagation()
+    copyTextToClipboard(url)
+  })
   document.getElementById('heroPositionWrap').style.display = 'block'
 }
 
@@ -510,16 +585,38 @@ function renderGalleryPreview() {
 
   preview.innerHTML = galleryItems.map((item, i) => `
     <div class="gallery-thumb" data-index="${i}">
-      <img src="${item.url}" alt="${item.alt || ''}">
+      <img src="${escapeAttr(item.url)}" alt="${escapeAttr(item.alt || '')}">
       <div class="gallery-thumb-actions">
+        <button type="button" class="gallery-thumb-btn insert-btn" data-index="${i}" title="Sett inn i tekst">＋</button>
+        <button type="button" class="gallery-thumb-btn copy-url-btn" data-index="${i}" title="Kopier URL">🔗</button>
         <button type="button" class="gallery-thumb-btn crop-btn" data-index="${i}" title="Beskjær">✂</button>
         <button type="button" class="gallery-thumb-btn alt-btn"  data-index="${i}" title="Alt-tekst">✎</button>
         <button type="button" class="gallery-thumb-btn rem-btn"  data-index="${i}" title="Fjern">×</button>
       </div>
-      ${item.alt ? `<div class="gallery-alt-badge" title="${item.alt}">ALT</div>` : ''}
+      ${item.alt ? `<div class="gallery-alt-badge" title="${escapeAttr(item.alt)}">ALT</div>` : ''}
     </div>`).join('')
 
   // Bind thumb action buttons
+  preview.querySelectorAll('.insert-btn').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation()
+      const idx = parseInt(btn.dataset.index)
+      const item = galleryItems[idx]
+      if (!item) return
+      insertArticleImage(item.url, item.alt || '')
+    })
+  })
+
+  preview.querySelectorAll('.copy-url-btn').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation()
+      const idx = parseInt(btn.dataset.index)
+      const item = galleryItems[idx]
+      if (!item) return
+      copyTextToClipboard(item.url)
+    })
+  })
+
   preview.querySelectorAll('.crop-btn').forEach(btn => {
     btn.addEventListener('click', e => {
       e.stopPropagation()
@@ -585,6 +682,7 @@ function initSortable() {
 
 // ─── Save ──────────────────────────────────────────────────
 document.getElementById('saveBtn').addEventListener('click', async () => {
+  deselectEditorImage()
   const id      = document.getElementById('editId').value
   const dateVal = document.getElementById('editDate').value
   const data = {
@@ -666,6 +764,50 @@ function selectEditorImage(img) {
   wrap.contentEditable = 'false'
   img.parentNode.insertBefore(wrap, img)
   wrap.appendChild(img)
+
+  // Image action menu
+  const menu = document.createElement('div')
+  menu.className = 'img-edit-menu'
+  menu.innerHTML = `
+    <button type="button" data-img-action="layout">Plassering</button>
+    <button type="button" data-img-action="url">URL</button>
+    <button type="button" data-img-action="alt">Alt</button>
+    <button type="button" data-img-action="copy">Kopier URL</button>
+    <button type="button" data-img-action="remove">Fjern</button>
+  `
+  wrap.appendChild(menu)
+
+  menu.addEventListener('click', e => {
+    const action = e.target?.dataset?.imgAction
+    if (!action) return
+    e.preventDefault()
+    e.stopPropagation()
+
+    if (action === 'layout') {
+      const current = img.dataset.layout || (img.className.match(/article-img-(full|center|left|right|behind|front)/)?.[1]) || 'full'
+      const layout = chooseImageLayout(current)
+      img.classList.remove('article-img-full', 'article-img-center', 'article-img-left', 'article-img-right', 'article-img-behind', 'article-img-front')
+      img.classList.add('article-img', `article-img-${layout}`)
+      img.dataset.layout = layout
+      setTimeout(() => selectEditorImage(img), 0)
+    }
+    if (action === 'url') {
+      const url = prompt('Bilde-URL:', img.getAttribute('src') || '')
+      if (url) img.setAttribute('src', url.trim())
+    }
+    if (action === 'alt') {
+      const alt = prompt('Alt-tekst:', img.getAttribute('alt') || '')
+      if (alt !== null) img.setAttribute('alt', alt.trim())
+    }
+    if (action === 'copy') {
+      copyTextToClipboard(img.getAttribute('src') || '')
+    }
+    if (action === 'remove') {
+      const parent = wrap.parentNode
+      wrap.remove()
+      parent?.focus?.()
+    }
+  })
 
   // Width indicator
   const indicator = document.createElement('div')
